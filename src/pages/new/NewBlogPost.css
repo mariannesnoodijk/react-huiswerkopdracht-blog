@@ -1,0 +1,7 @@
+
+.new-post-form {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 40px;
+}
