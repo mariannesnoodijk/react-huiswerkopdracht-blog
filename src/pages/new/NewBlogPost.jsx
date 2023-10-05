@@ -1,10 +1,12 @@
 import React from 'react';
 import './NewBlogPost.css';
-import {useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {useState} from "react";
 import calculateReadTime from "../../helpers/calculateReadTime.js";
+import axios from "axios";
 
 function NewBlogPost() {
+
     const [formState, setFormState] = useState({
         title: '',
         subtitle: '',
@@ -12,7 +14,10 @@ function NewBlogPost() {
         content: '',
     });
 
-    const navigate = useNavigate();
+    const [submitSuccessId, setSubmitSuccessId] = useState(null);
+    const [error, toggleError] = useState(false);
+    // const navigate = useNavigate();
+
 
     function handleChange(e) {
         setFormState({
@@ -21,7 +26,9 @@ function NewBlogPost() {
         })
     }
 
-    function handleSubmit(e) {
+
+    async function handleSubmit(e) {
+        toggleError(false);
         e.preventDefault();
 
         console.log({
@@ -32,13 +39,28 @@ function NewBlogPost() {
             readTime: calculateReadTime(formState.content),
         });
 
-        console.log('De blog is succesvol verzameld.');
-        navigate('/blogposts');
+        try {
+            const response = await axios.post('http://localhost:3000/posts', {
+                ...formState,
+                shares: 0,
+                comments: 0,
+                created: new Date().toISOString(),
+                readTime: calculateReadTime(formState.content),
+            });
+            console.log(response.data);
+
+            console.log('De blog is succesvol toegevoegd!');
+            setSubmitSuccessId(response.data.id);
+
+        } catch(e) {
+            toggleError(true);
+        }
     }
 
     return (
         <section className="new-post-section outer-content-container">
             <div className="inner-content-container__text-restriction">
+                {!submitSuccessId ?
                 <form className="new-post-form" onSubmit={handleSubmit}>
                     <h1>Post toevoegen</h1>
                     <label htmlFor="post-title">Titel</label>
@@ -82,7 +104,9 @@ function NewBlogPost() {
                     <button type="submit">
                         Verzenden
                     </button>
+                    {error && <p>Er is iets misgegaan bij het versturen van het formulier. Probeer het opnieuw</p>}
                 </form>
+                    : <p>De blogpost is succesvol toegevoegd. Je kunt deze <Link to={`/posts/${submitSuccessId}`}>hier</Link> bekijken.</p>}
             </div>
         </section>
     );
