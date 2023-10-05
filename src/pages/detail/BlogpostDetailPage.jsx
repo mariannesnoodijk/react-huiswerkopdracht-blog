@@ -3,37 +3,48 @@ import './BlogpostDetailPage.css';
 import {Link} from "react-router-dom";
 
 import {useParams} from "react-router-dom";
-import posts from "../../constants/data.json";
 import formatDateString from "../../helpers/formatDateString.js";
+import axios from "axios";
 
 
 function BlogpostDetailPage() {
-    const [,] = useState();
-    const {blogId} = useParams();
+    const [blogInfo, setBlogInfo] = useState({});
+    const [error, toggleError] = useState(false)
 
-    const {title, readTime, subtitle, author, created, content, comments, shares} = posts.find((post) => {
-        return post.id.toString() === blogId;
-    });
+    const {blogId} = useParams(); // pakt wat achter de / wordt gezet in de url
 
+    async function fetchBlogInfo() {
+        toggleError(false);
+        try {
+            const response = await axios.get(`http://localhost:3000/posts/${blogId}`);
+            setBlogInfo(response.data);
+            console.log(response.data);
+        } catch (error) {
+            console.log(error);
+            toggleError(true);
+        }
+    }
 
 
     return (
         <>
-            <div className="container-blogdetails">
-                <h1>{title}</h1>
-                <h2>{subtitle}</h2>
-                <p className="post-detail-author">Geschreven door <em>{author}</em> op {formatDateString(created)}</p>
-                <span className="post-detail-read-time">
-                    {/*<Clock color="#50535C" size={18}/>*/}
-                    <p> {readTime} minuten lezen</p>
+            <button type="button" className="detailpage-button" onClick={fetchBlogInfo}>Haal post op</button>
+            {Object.keys(blogInfo).length > 0 &&
+                <div className="container-blogdetails">
+                    <h1>{blogInfo.title}</h1>
+                    <h2>{blogInfo.subtitle}</h2>
+                    <p className="post-detail-author">Geschreven door <em>{blogInfo.author}</em> op {formatDateString(blogInfo.created)}</p>
+                    <span className="post-detail-read-time">
+                        <p> {blogInfo.readTime} minuten lezen</p>
                 </span>
-                <p>{content}</p>
-                <p>{comments} reacties - {shares} gedeeld</p>
-            </div>
+                    <p>{blogInfo.content}</p>
+                    <p>{blogInfo.comments} reacties - {blogInfo.shares} gedeeld</p>
+                </div>}
             <p><Link to="/blogposts">Breng mij terug naar de overzichtspagina!</Link></p>
         </>
     );
 }
 
 export default BlogpostDetailPage;
+
 
